@@ -48,9 +48,9 @@ def get_neighbours(pos, matrix):
 # black_white, minor, symbols
 
 COL_SYM = SVG(False, True, True)
-blw_nsy = SVG(True, True, True)
-col_nsy = SVG(False, False, False)
-key = SVG(False, True, True)
+BLW_NSY = SVG(True, True, True)
+COL_NSY = SVG(False, False, False)
+KEY = SVG(False, True, True)
 
 # b
 
@@ -117,34 +117,34 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
     height = y_count * svg_cell_size
     COL_SYM.prep_for_drawing(width, height)
     COL_SYM.mid_arrows(svg_cell_size, width, height)
-    blw_nsy.prep_for_drawing(width, height)
-    blw_nsy.mid_arrows(svg_cell_size, width, height)
-    col_nsy.prep_for_drawing(width, height)
+    BLW_NSY.prep_for_drawing(width, height)
+    BLW_NSY.mid_arrows(svg_cell_size, width, height)
+    COL_NSY.prep_for_drawing(width, height)
     x = y = svg_cell_size # to allow drawing of midpoint arrows
     for row in svg_pattern:
         for colour_index in row:
             COL_SYM.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
-            blw_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
-            col_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
+            BLW_NSY.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
+            COL_NSY.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
             x += svg_cell_size
         y += svg_cell_size
         x = svg_cell_size
-    blw_nsy.major_gridlines(svg_cell_size, width, height)
+    BLW_NSY.major_gridlines(svg_cell_size, width, height)
     COL_SYM.major_gridlines(svg_cell_size, width, height)
 
     # 9
 
     size = 40
-    key.prep_for_drawing(size * 13, size * len(svg_palette))
+    KEY.prep_for_drawing(size * 13, size * len(svg_palette))
     x = y = 0
     for i in range(len(svg_palette)):
-        key.add_key_colour(x, y, size, i, svg_palette[i])
+        KEY.add_key_colour(x, y, size, i, svg_palette[i])
         y += size
 
-    COL_SYM.save('col_sym.svg')
-    blw_nsy.save('blw_sym.svg')
-    col_nsy.save('col_nsy.svg')
-    key.save('key.svg')
+    COL_SYM.save(Path(out_directory, 'col_sym.svg'))
+    BLW_NSY.save(Path(out_directory, 'blw_sym.svg'))
+    COL_NSY.save(Path(out_directory, 'col_nsy.svg'))
+    KEY.save(Path(out_directory, 'key.svg'))
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
