@@ -51,6 +51,7 @@ COL_SYM = SVG(False, True, True)
 BLW_NSY = SVG(True, True, True)
 COL_NSY = SVG(False, False, False)
 KEY = SVG(False, True, True)
+KEY_SIZE_WIDTH = 13
 
 # b
 
@@ -152,11 +153,11 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
 
 
     # generate the key table
-    KEY.prep_for_drawing(key_size * 13, key_size * len(svg_palette))
-    x = y = 0
-    for i in range(len(svg_palette)):
-        KEY.add_key_colour(x, y, key_size, i, svg_palette[i])
-        y += key_size
+    KEY.prep_for_drawing(key_size * KEY_SIZE_WIDTH, key_size * len(svg_palette))
+    x_count = y_count = 0
+    for idx in range(len(svg_palette)):
+        KEY.add_key_colour(x_count, y_count, key_size, idx, svg_palette[idx])
+        y_count += key_size
 
     COL_SYM.save(Path(out_directory, 'col_sym.svg'))
     BLW_NSY.save(Path(out_directory, 'blw_sym.svg'))
