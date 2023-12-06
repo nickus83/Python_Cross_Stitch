@@ -56,6 +56,13 @@ KEY = SVG(False, True, True)
 
 # im = Image.open(input_file_name)
 
+def image_resize(image: Image, size: int, new_width: int = 1000) -> Tuple[any, int]:
+    new_width  = 1000
+    pixelSize = int(new_width / int(size))
+    new_height = int(new_width * im.size[1] / im.size[0])
+    image = image.resize((new_width, new_height), Image.NEAREST)
+    return image, pixelSize
+
 # c
 def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path) -> None:
     if not out_directory.exists():              # size == count
@@ -67,13 +74,14 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
     if not image_file_path.is_file():
         raise Exception("input file does not exist")
     else:
-        im = Image.open(image_file_path)
+        image = Image.open(image_file_path)
 
     # im = Image.open(input_file_name)
-    new_width  = 1000
-    pixelSize = int(new_width / int(size))
-    new_height = int(new_width * im.size[1] / im.size[0])
-    im = im.resize((new_width, new_height), Image.NEAREST)
+    # new_width  = 1000
+    # pixelSize = int(new_width / int(size))
+    # new_height = int(new_width * im.size[1] / im.size[0])
+    # im = im.resize((new_width, new_height), Image.NEAREST)
+    image, pixelSize = image_resize(image, size)
 
     # 1, 2
 
