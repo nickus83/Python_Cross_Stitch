@@ -86,10 +86,9 @@ def update_svg_pattern(x_count: int, y_count: int, svg_pattern: SVG) -> None:
 # c
 def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path,
         svg_cell_size: int, key_size: int) -> None:
-    if not out_directory.exists():              # size == count
+    if not out_directory.exists():
         makedirs(out_directory)
 
-    # 0
     # open image
     image_file_path = Path(input_file_path)
     if not image_file_path.is_file():
@@ -97,17 +96,10 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
     else:
         image = Image.open(image_file_path)
 
-    # im = Image.open(input_file_name)
-    # new_width  = 1000
-    # pixelSize = int(new_width / int(size))
-    # new_height = int(new_width * im.size[1] / im.size[0])
-    # im = im.resize((new_width, new_height), Image.NEAREST)
     image, pixelSize = image_resize(image, size)
 
-    # 1, 2
-    # d = DMC()
-    # dmc_spaced = [[dmc.get_dmc_rgb_triple(image.getpixel((x, y))) for x in range(0, image.size[0], pixelSize)] for y in range(0, image.size[1], pixelSize)]
-    # d == dmc!
+    # take the spaced out pixels
+    # convert these pixels to dmc colours
     dmc = DMC()
     dmc_spaced = [
         [
@@ -117,48 +109,25 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
         for y in range(0, image.size[1], pixelSize)
     ]
 
-    # 3
-
-    # dmc_image = Image.new('RGB', (len(dmc_spaced[0]), len(dmc_spaced))) #h, w
-    # dmc_image.putdata([value for row in dmc_spaced for value in row])
-
-    # # 4, 5
-
-    # dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = num_colours)
-
     # quantise the image with the required number of colours
     #  a new image can then be created with row x column of palette indices
     dmc_image = get_dmc_image(dmc_spaced, num_colours)
     x_count = dmc_image.size[0]
     y_count = dmc_image.size[1]
-    # a new palette can then be created with the dmc 'objects'
+
     svg_pattern = [[dmc_image.getpixel((x, y)) for x in range(x_count)] for y in range(y_count)]
 
-    # 6
-
+    # a new palette can then be created with the dmc 'objects'
     palette = dmc_image.getpalette()
-    # svg_palette = [dmc.get_colour_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(num_colours)]
     svg_palette = [
         dmc.get_colour_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2]))
         for i in range(num_colours)
     ]
 
-    # 7
+    # do any extra required cleaning up, for example removing isolated pixels
     update_svg_pattern(x_count, y_count, svg_pattern)
-    # if True:
-    #     for x in range(0, x_count):
-    #         for y in range(0, y_count):
-    #             gen = get_neighbours([y, x], svg_pattern)
-    #             neighbours = []
-    #             for n in gen:
-    #                 neighbours += [n]
-    #             if svg_pattern[y][x] not in neighbours:
-    #                 mode = max(neighbours, key=neighbours.count)
-    #                 svg_pattern[y][x] = mode
 
-    # 8
-
-    # svg_cell_size = 10
+    # svgs can be produced of black/white, colour with symbols, colour only patterns.
     width = x_count * svg_cell_size
     height = y_count * svg_cell_size
 
@@ -181,9 +150,8 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
     BLW_NSY.major_gridlines(svg_cell_size, width, height)
     COL_SYM.major_gridlines(svg_cell_size, width, height)
 
-    # 9
 
-    # key_size = 40
+    # generate the key table
     KEY.prep_for_drawing(key_size * 13, key_size * len(svg_palette))
     x = y = 0
     for i in range(len(svg_palette)):
