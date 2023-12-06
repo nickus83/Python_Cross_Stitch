@@ -21,6 +21,7 @@ import sys
 from PIL import Image
 from DMC import DMC
 from SVG import SVG
+from pathlib import Path
 
 def get_neighbours(pos, matrix):
     rows = len(matrix)
@@ -30,7 +31,7 @@ def get_neighbours(pos, matrix):
         for j in range(max(0, pos[1] - width), min(cols, pos[1] + width + 1)):
             if not (i == pos[0] and j == pos[1]):
                 yield matrix[i][j]
-    
+
 # a
 
 if(len(sys.argv)<3):
@@ -41,8 +42,8 @@ input_file_name = sys.argv[1]       # input file name, has to be a jpg
 num_colours = int(sys.argv[2])      # number of colours to use in the pattern
 count = int(sys.argv[3])            # stitch count, number of stitches in x axis
 
-# black_white, minor, symbols    
-    
+# black_white, minor, symbols
+
 col_sym = SVG(False, True, True)
 blw_nsy = SVG(True, True, True)
 col_nsy = SVG(False, False, False)
@@ -129,4 +130,3 @@ col_sym.save('col_sym.svg')
 blw_nsy.save('blw_sym.svg')
 col_nsy.save('col_nsy.svg')
 key.save('key.svg')
-
