@@ -23,10 +23,31 @@ from DMC import DMC
 from SVG import SVG
 from tqdm import tqdm
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 from os import makedirs
 
+COL_SYM = SVG(False, True, True)
+BLW_NSY = SVG(True, True, True)
+COL_NSY = SVG(False, False, False)
+KEY = SVG(False, True, True)
+KEY_SIZE_WIDTH = 13
+
 def get_neighbours(pos, matrix):
+    """
+    Retrieves the neighboring elements of a given position in a matrix.
+
+    Parameters:
+        pos (tuple): The position (row, column) of the element in the matrix.
+        matrix (list): The matrix containing the elements.
+
+    Yields:
+        object: The neighboring elements of the given position.
+
+    Example:
+        >>> matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        >>> list(get_neighbours((1, 1), matrix))
+        [1, 2, 3, 4, 6, 7, 8, 9]
+    """
     rows = len(matrix)
     cols = len(matrix[0]) if rows else 0
     width = 1
@@ -35,36 +56,35 @@ def get_neighbours(pos, matrix):
             if not (i == pos[0] and j == pos[1]):
                 yield matrix[i][j]
 
-# a
-
-# if(len(sys.argv)<3):
-#     print("function requires an input filename, number of colours, stitch count and mode")
-#     sys.exit(0)
-
-# input_file_name = sys.argv[1]       # input file name, has to be a jpg
-# num_colours = int(sys.argv[2])      # number of colours to use in the pattern
-# count = int(sys.argv[3])            # stitch count, number of stitches in x axis
-
-# black_white, minor, symbols
-
-COL_SYM = SVG(False, True, True)
-BLW_NSY = SVG(True, True, True)
-COL_NSY = SVG(False, False, False)
-KEY = SVG(False, True, True)
-KEY_SIZE_WIDTH = 13
-
-# b
-
-# im = Image.open(input_file_name)
-
 def image_resize(image: Image, size: int, new_width: int = 1000) -> Tuple[any, int]:
-    new_width  = 1000
+    """
+    Resizes an image to a specified size, while maintaining its aspect ratio.
+
+    Parameters:
+    - image: The image to be resized. (type: Image)
+    - size: The desired size of the image. (type: int)
+    - new_width: The new width of the image. Default is 1000. (type: int)
+
+    Returns:
+    - A tuple containing the resized image and the size of each pixel. (type: Tuple[any, int])
+    """
     pixelSize = int(new_width / int(size))
     new_height = int(new_width * image.size[1] / image.size[0])
     image = image.resize((new_width, new_height), Image.NEAREST)
     return image, pixelSize
 
-def get_dmc_image(dmc_spaced, num_colours: int) -> Image:
+def get_dmc_image(dmc_spaced: List[List[Tuple[int, int, int]]], num_colours: int) -> Image:
+    """
+    Generates a DMC image from a given DMC spaced image and the desired number of colors.
+
+    Args:
+        dmc_spaced (List[List[Tuple[int, int, int]]]): The DMC spaced image represented as a list of lists of RGB tuples.
+        num_colours (int): The desired number of colors in the DMC image.
+
+    Returns:
+        Image: The generated DMC image.
+
+    """
     dmc_image = Image.new('RGB', (len(dmc_spaced[0]), len(dmc_spaced))) #h, w
     dmc_image.putdata([value for row in dmc_spaced for value in row])
     dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = num_colours)
@@ -72,6 +92,17 @@ def get_dmc_image(dmc_spaced, num_colours: int) -> Image:
     return dmc_image
 
 def update_svg_pattern(x_count: int, y_count: int, svg_pattern: SVG) -> None:
+    """
+    Update the SVG pattern by filling in missing values with the mode of its neighbors.
+
+    Args:
+        x_count (int): The number of columns in the SVG pattern.
+        y_count (int): The number of rows in the SVG pattern.
+        svg_pattern (SVG): The SVG pattern to be updated.
+
+    Returns:
+        None: This function modifies the `svg_pattern` in place and does not return anything.
+    """
     for x in range(0, x_count):
             for y in range(0, y_count):
                 gen = get_neighbours([y, x], svg_pattern)
@@ -82,11 +113,23 @@ def update_svg_pattern(x_count: int, y_count: int, svg_pattern: SVG) -> None:
                     mode = max(neighbours, key=neighbours.count)
                     svg_pattern[y][x] = mode
 
-    return svg_pattern
-
 # c
 def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path,
         svg_cell_size: int, key_size: int) -> None:
+    """
+    Generates a set of SVG files based on the input image file.
+
+    Args:
+        input_file_path (Path): The path to the input image file.
+        num_colours (int): The number of colors to quantize the image to.
+        size (int): The size to resize the image to.
+        out_directory (Path): The directory to save the generated SVG files to.
+        svg_cell_size (int): The size of each cell in the SVG files.
+        key_size (int): The size of the key table in the SVG files.
+
+    Returns:
+        None: This function does not return anything.
+    """
     if not out_directory.exists():
         makedirs(out_directory)
 
