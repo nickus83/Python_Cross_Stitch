@@ -26,14 +26,14 @@ from pathlib import Path
 from typing import Tuple
 from os import makedirs
 
-# def get_neighbours(pos, matrix, width: int = 1):
-#     rows = len(matrix)
-#     cols = len(matrix[0]) if rows else 0
+def get_neighbours(pos, matrix, width: int = 1):
+    rows = len(matrix)
+    cols = len(matrix[0]) if rows else 0
 
-#     for i in range(max(0, pos[0] - width), min(rows, pos[0] + width + 1)):
-#         for j in range(max(0, pos[1] - width), min(cols, pos[1] + width + 1)):
-#             if not (i == pos[0] and j == pos[1]):
-#                 yield matrix[i][j]
+    for i in range(max(0, pos[0] - width), min(rows, pos[0] + width + 1)):
+        for j in range(max(0, pos[1] - width), min(cols, pos[1] + width + 1)):
+            if not (i == pos[0] and j == pos[1]):
+                yield matrix[i][j]
 
 # # a
 
@@ -61,6 +61,28 @@ def image_resize(image, count: int, new_width: int = 1000) -> Tuple[any, int]:
     new_height = int(new_width * image.size[1] / image.size[0])
     return image.resize((new_width, new_height), Image.NEAREST), pixelSize
 
+def clean_up(x_count: int, y_count: int, svg_pattern: SVG) -> None:
+    for x in range(0, x_count):
+        for y in range(0, y_count):
+            gen = get_neighbours([y, x], svg_pattern)
+            neighbours = []
+            for n in gen:
+                neighbours += [n]
+            if svg_pattern[y][x] not in neighbours:
+                mode = max(neighbours, key=neighbours.count)
+                svg_pattern[y][x] = mode
+
+def calculate_cell_size(x_count: int, y_count: int, col_sym: SVG, blw_nsy: SVG, col_nsy: SVG, svg_cell_size: int = 10) -> int:
+    svg_cell_size = 10
+    width = x_count * svg_cell_size
+    height = y_count * svg_cell_size
+    col_sym.prep_for_drawing(width, height)
+    col_sym.mid_arrows(svg_cell_size, width, height)
+    blw_nsy.prep_for_drawing(width, height)
+    blw_nsy.mid_arrows(svg_cell_size, width, height)
+    col_nsy.prep_for_drawing(width, height)
+    return  svg_cell_size # to allow drawing of midpoint arrows
+
 def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path) -> None:
     if not out_directory.exists():              # size == count
         makedirs(out_directory)
@@ -72,66 +94,57 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
     col_nsy = SVG(False, False, False)
     key = SVG(False, True, True)
 
-    # b
+    # open image
     if not input_file_path.is_file():
         raise Exception("input file does not exist")
     else:
         im = Image.open(input_file_path)
-    # import pdb; pdb.set_trace()
-    # c
-
-    # new_width  = 1000
-    # pixelSize = int(new_width / int(count))
-    # new_height = int(new_width * im.size[1] / im.size[0])
-    # # import pdb; pdb.set_trace()
-    # im = im.resize((new_width, new_height), Image.NEAREST)
-    im, pixelSize = image_resize(im, count)
-    # 1, 2
-
+    # resize image
+    im, pixelSize = image_resize(im, size)
+    # take the spaced out pixels
+    # convert these pixels to dmc colours
     dmc = DMC()
     dmc_spaced = [[dmc.get_dmc_rgb_triple(im.getpixel((x, y))) for x in range(0, im.size[0], pixelSize)] for y in range(0, im.size[1], pixelSize)]
 
-    # 3
-
+    # create a new smaller image with these pixels
     dmc_image = Image.new('RGB', (len(dmc_spaced[0]), len(dmc_spaced))) #h, w
     dmc_image.putdata([value for row in dmc_spaced for value in row])
 
-    # 4, 5
-
+    # quantise the image with the required number of colours
     dmc_image = dmc_image.convert('P', palette=Image.ADAPTIVE, colors = num_colours)
     x_count = dmc_image.size[0]
     y_count = dmc_image.size[1]
+    # a new image can then be created with row x column of palette indices
     svg_pattern = [[dmc_image.getpixel((x, y)) for x in range(x_count)] for y in range(y_count)]
 
-    # 6
-
+    # a new palette can then be created with the dmc 'objects'
     palette = dmc_image.getpalette()
-    svg_palette = [d.get_colour_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(num_colours)]
+    svg_palette = [dmc.get_colour_code_corrected((palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2])) for i in range(num_colours)]
 
-    # 7
+    # do any extra required cleaning up, for example removing isolated pixels
+    clean_up(x_count, y_count, svg_pattern)
+    # for x in range(0, x_count):
+    #     for y in range(0, y_count):
+    #         gen = get_neighbours([y, x], svg_pattern)
+    #         neighbours = []
+    #         for n in gen:
+    #             neighbours += [n]
+    #         if svg_pattern[y][x] not in neighbours:
+    #             mode = max(neighbours, key=neighbours.count)
+    #             svg_pattern[y][x] = mode
 
-    if True:
-        for x in range(0, x_count):
-            for y in range(0, y_count):
-                gen = get_neighbours([y, x], svg_pattern)
-                neighbours = []
-                for n in gen:
-                    neighbours += [n]
-                if svg_pattern[y][x] not in neighbours:
-                    mode = max(neighbours, key=neighbours.count)
-                    svg_pattern[y][x] = mode
-
-    # 8
-
-    svg_cell_size = 10
-    width = x_count * svg_cell_size
-    height = y_count * svg_cell_size
-    col_sym.prep_for_drawing(width, height)
-    col_sym.mid_arrows(svg_cell_size, width, height)
-    blw_nsy.prep_for_drawing(width, height)
-    blw_nsy.mid_arrows(svg_cell_size, width, height)
-    col_nsy.prep_for_drawing(width, height)
-    x = y = svg_cell_size # to allow drawing of midpoint arrows
+    # svgs can be produced of black/white, colour with symbols, colour only patterns
+    svg_cell_size = calculate_cell_size(x_count, y_count, col_sym, blw_nsy, col_nsy)
+    import pdb; pdb.set_trace()
+    # svg_cell_size = 10
+    # width = x_count * svg_cell_size
+    # height = y_count * svg_cell_size
+    # col_sym.prep_for_drawing(width, height)
+    # col_sym.mid_arrows(svg_cell_size, width, height)
+    # blw_nsy.prep_for_drawing(width, height)
+    # blw_nsy.mid_arrows(svg_cell_size, width, height)
+    # col_nsy.prep_for_drawing(width, height)
+    # x = y = svg_cell_size # to allow drawing of midpoint arrows
 
     for row in tqdm(svg_pattern, total=len(svg_pattern)):
         for colour_index in row:
