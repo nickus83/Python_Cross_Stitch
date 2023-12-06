@@ -21,7 +21,10 @@ import sys
 from PIL import Image
 from DMC import DMC
 from SVG import SVG
+from tqdm import tqdm
 from pathlib import Path
+from typing import Tuple
+from os import makedirs
 
 def get_neighbours(pos, matrix):
     rows = len(matrix)
@@ -44,7 +47,7 @@ def get_neighbours(pos, matrix):
 
 # black_white, minor, symbols
 
-col_sym = SVG(False, True, True)
+COL_SYM = SVG(False, True, True)
 blw_nsy = SVG(True, True, True)
 col_nsy = SVG(False, False, False)
 key = SVG(False, True, True)
@@ -54,12 +57,22 @@ key = SVG(False, True, True)
 # im = Image.open(input_file_name)
 
 # c
-def main(input_file_name, num_colours, count, svg):
+def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path) -> None:
+    if not out_directory.exists():              # size == count
+        makedirs(out_directory)
+
     # 0
-    im = Image.open(input_file_name
+    # open image
+    image_file_path = Path(input_file_path)
+    if not image_file_path.is_file():
+        raise Exception("input file does not exist")
+    else:
+        im = Image.open(image_file_path)
+
+    # im = Image.open(input_file_name)
     new_width  = 1000
-    pixelSize = int(new_width / int(count))
-    new_height = new_width * im.size[1] / im.size[0]
+    pixelSize = int(new_width / int(size))
+    new_height = int(new_width * im.size[1] / im.size[0])
     im = im.resize((new_width, new_height), Image.NEAREST)
 
     # 1, 2
@@ -102,22 +115,22 @@ def main(input_file_name, num_colours, count, svg):
     svg_cell_size = 10
     width = x_count * svg_cell_size
     height = y_count * svg_cell_size
-    col_sym.prep_for_drawing(width, height)
-    col_sym.mid_arrows(svg_cell_size, width, height)
+    COL_SYM.prep_for_drawing(width, height)
+    COL_SYM.mid_arrows(svg_cell_size, width, height)
     blw_nsy.prep_for_drawing(width, height)
     blw_nsy.mid_arrows(svg_cell_size, width, height)
     col_nsy.prep_for_drawing(width, height)
     x = y = svg_cell_size # to allow drawing of midpoint arrows
     for row in svg_pattern:
         for colour_index in row:
-            col_sym.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
+            COL_SYM.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
             blw_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
             col_nsy.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
             x += svg_cell_size
         y += svg_cell_size
         x = svg_cell_size
     blw_nsy.major_gridlines(svg_cell_size, width, height)
-    col_sym.major_gridlines(svg_cell_size, width, height)
+    COL_SYM.major_gridlines(svg_cell_size, width, height)
 
     # 9
 
@@ -128,7 +141,7 @@ def main(input_file_name, num_colours, count, svg):
         key.add_key_colour(x, y, size, i, svg_palette[i])
         y += size
 
-    col_sym.save('col_sym.svg')
+    COL_SYM.save('col_sym.svg')
     blw_nsy.save('blw_sym.svg')
     col_nsy.save('col_nsy.svg')
     key.save('key.svg')
