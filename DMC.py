@@ -58,8 +58,8 @@ class DMC:
         r2, g2, b2 = c2
         return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2
 
+
     def euclidean_distance_corrected(self, c1, c2):
         (r1, g1, b1, name, code) = c1
-        (r2, g2, b2) = c2
-        return math.sqrt(2 * ((r1-r2)**2) + 4*((g1-g2)**2) + 3*((b1-b2)**2))
-        #return ((r1 - r2) * 0.3) ** 2 + ((g1 - g2) * 0.59) ** 2 + ((b1 - b2) * 0.11) ** 2
+        r2, g2, b2 = c2[:3]  # Extract the first 3 values from c2
+        return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2

@@ -153,7 +153,7 @@ def main(input_file_path: Path, num_colours: int, size: int, out_directory: Path
 
         x = y = svg_cell_size # to allow drawing of midpoint arrows
 
-        for row in svg_pattern:
+        for row in tqdm(svg_pattern, desc="Drawing SVGs"):
             for colour_index in row:
                 COL_SYM.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
                 BLW_NSY.add_rect(svg_palette, colour_index, x, y, svg_cell_size)
